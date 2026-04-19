@@ -1,17 +1,16 @@
-const express = require('express');
-const app = express();
-const PORT = 3000;
+require('express').Router();
 
-// In-memory tasks array
-dlet tasks = [];
+const { validateTaskInput } = require('./hotfix');
+
+const tasks = [];
 
 // GET /tasks - list all tasks
-app.get('/tasks', (req, res) => {
+get('/tasks', (req, res) => {
   res.json(tasks);
 });
 
 // POST /tasks - create a task
-app.post('/tasks', (req, res) => {
+post('/tasks', validateTaskInput, (req, res) => {
   const { title } = req.body;
   const task = {
     id: Date.now(),
@@ -23,7 +22,7 @@ app.post('/tasks', (req, res) => {
 });
 
 // PUT /tasks/:id - update a task
-app.put('/tasks/:id', (req, res) => {
+put('/tasks/:id', (req, res) => {
   const { title, status } = req.body;
   const taskIndex = tasks.findIndex(t => t.id === parseInt(req.params.id));
   if (taskIndex !== -1) {
@@ -35,7 +34,7 @@ app.put('/tasks/:id', (req, res) => {
 });
 
 // DELETE /tasks/:id - delete a task
-app.delete('/tasks/:id', (req, res) => {
+delete('/tasks/:id', (req, res) => {
   const taskIndex = tasks.findIndex(t => t.id === parseInt(req.params.id));
   if (taskIndex !== -1) {
     tasks.splice(taskIndex, 1);
@@ -43,11 +42,6 @@ app.delete('/tasks/:id', (req, res) => {
   } else {
     res.status(404).json({ error: 'Task not found' });
   }
-});
-
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = { tasks };
