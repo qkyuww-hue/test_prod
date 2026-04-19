@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; color: #000; margin: 20px; }
+    h1 { text-align: center; color: #333; }
+    #tasks { margin-top: 30px; }
+    #taskInput, button { display: block; margin: 10px 0; padding: 10px; width: 100%; }
+    .task { padding: 10px; border: 1px solid #ccc; }
+    .task-completed { text-decoration: line-through; color: gray; }
+  </style>
+</head>
+<body>
+  <h1>Task Tracker</h1>
+  <div id="tasks">
+  </div>
+
+  <input type="text" id="taskInput" placeholder="Enter new task..." />
+  <button onclick="addTask()">Add Task</button>
+
+  <script>
+    async function fetchTasks() {
+      try {
+        const response = await fetch('http://localhost:3000/tasks');
+        return await response.json();
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    async function loadTasks() {
+      const container = document.getElementById('tasks');
+      container.innerHTML = '';
+      
+      if (tasks.length === 0) {
+        container.innerHTML = '<p>No tasks found.</p>';
+        return;
+      }
+
+      await fetchTasks().then(tasks => {
+        tasks.forEach(task => {
+          const div = document.createElement('div');
+          div.className = 'task ' + (task.status === 'completed' ? 'task-completed' : '');
+          div.innerHTML = `<strong>${task.title}</strong><br />${task.status} `
+          
+          const completeBtn = document.createElement('button');
+          completeBtn.innerText = task.status === 'completed' ? 'Undo' : 'Complete';
+          completeBtn.onclick = () => toggleComplete(task.id);
+          div.appendChild(completeBtn);
+          
+          const deleteBtn = document.createElement('button');
+          deleteBtn.innerText = 'Delete';
+          deleteBtn.onclick = () => deleteTask(task.id);
+          div.appendChild(deleteBtn);
+          
+          container.appendChild(div);
+        });
+      });
+    }
+
+    function addTask() {
+      const input = document.getElementById('taskInput');
+      const title = input.value.trim();
+      if (!title) return;
+
+      fetchTasks().then(tasks => {
+        const task = { id: Date.now().toString(), title, status: 'todo' };
+        tasks.push(task);
+        fetch('http://localhost:3000/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(task)
+        });
+      });
+      input.value = '';
+    }
+
+    async function toggleComplete(taskId) {
+      const task = await fetchTasks().find(t => t.id === taskId);
+      if (!task) return;
+
+      task.status = task.status === 'completed' ? 'todo' : 'completed';
+      await fetch('http://localhost:3000/tasks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task)
+      });
+      loadTasks();
+    }
+
+    async function deleteTask(taskId) {
+      const response = await fetch('http://localhost:3000/tasks', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: taskId })
+      });
+      await response.json();
+      loadTasks();
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
