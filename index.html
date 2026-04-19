@@ -17,7 +17,7 @@
   <h1>Task Tracker</h1>
   <div id="tasks"></div>
 
-  <input type="text" id="taskInput" placeholder="Enter new task..." />
+  <input type="text" id="taskInput" placeholder="Enter new task...">
   <button onclick="addTask()">Add Task</button>
 
   <script>
@@ -44,8 +44,8 @@
       tasks.forEach(task => {
         const div = document.createElement('div');
         div.className = 'task ' + (task.status === 'completed' ? 'task-completed' : '');
-        div.innerHTML = `<strong>${task.title}</strong><br />${task.status} `
-          
+        div.innerHTML = `<strong>${task.title}</strong><br />${task.status} `;
+        // Add buttons
         const completeBtn = document.createElement('button');
         completeBtn.innerText = task.status === 'completed' ? 'Undo' : 'Complete';
         completeBtn.onclick = () => toggleComplete(task.id);
@@ -88,8 +88,8 @@
         body: JSON.stringify(task)
       });
       loadTasks();
-    }
-
+    }。
+    
     async function deleteTask(taskId) {
       const response = await fetch('http://localhost:3000/tasks', {
         method: 'DELETE',
