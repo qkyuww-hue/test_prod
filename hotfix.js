@@ -1,14 +1,1 @@
-export function validateTaskTitle(req, res, next) {
-  const { title } = req.body;
-  const trimmedTitle = title?.trim();
-
-  if (!trimmedTitle) {
-    return res.status(400).json({
-      error: 'Title is required',
-      details: 'Please provide a non-empty title for the task'
-    });
-  }
-
-  req.body.title = trimmedTitle;
-  next();
-}
+export function validateTaskTitle(req, res, next) {\n  const { title } = req.body;\n  const trimmedTitle = title?.trim();\n\n  if (!trimmedTitle) {\n    return res.status(400).json({\n      error: 'Title is required',\n      details: 'Please provide a non-empty title for the task'\n    });\n  }\n\n  req.body.title = trimmedTitle;\n  next();\n}
