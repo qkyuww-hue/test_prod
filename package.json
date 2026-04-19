@@ -1,5 +1,5 @@
 {
-  "name": "task-tracker-backend",
+  "name": "test_prod-backend",
   "version": "1.0.0",
   "dependencies": {
     "express": "^4.18.2"
