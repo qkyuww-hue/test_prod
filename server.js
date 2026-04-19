@@ -3,44 +3,51 @@ const app = express();
 const PORT = 3000;
 
 // In-memory tasks array
-const tasks = [];
+dlet tasks = [];
 
 // GET /tasks - list all tasks
 app.get('/tasks', (req, res) => {
   res.json(tasks);
 });
 
-// POST /tasks - create a task (title, status defaults to "todo")
+// POST /tasks - create a task
 app.post('/tasks', (req, res) => {
-  const { title, status = 'todo' } = req.body;
-  tasks.push({ id: Date.now().toString(), title, status });
-  res.status(201).json(tasks);
+  const { title } = req.body;
+  const task = {
+    id: Date.now(),
+    title,
+    status: 'todo',
+  };
+  tasks.push(task);
+  res.status(201).json(task);
 });
 
 // PUT /tasks/:id - update a task
 app.put('/tasks/:id', (req, res) => {
-  const { id } = req.params;
   const { title, status } = req.body;
-  const task = tasks.find(task => task.id === id);
-  if (!task) {
-    return res.status(404).json({ error: 'Task not found' });
+  const taskIndex = tasks.findIndex(t => t.id === parseInt(req.params.id));
+  if (taskIndex !== -1) {
+    tasks[taskIndex] = { ...tasks[taskIndex], title, status };
+    res.json(tasks[taskIndex]);
+  } else {
+    res.status(404).json({ error: 'Task not found' });
   }
-  task.title = title;
-  task.status = status;
-  res.json(task);
 });
 
 // DELETE /tasks/:id - delete a task
 app.delete('/tasks/:id', (req, res) => {
-  const { id } = req.params;
-  const task = tasks.find(task => task.id === id);
-  if (!task) {
-    return res.status(404).json({ error: 'Task not found' });
+  const taskIndex = tasks.findIndex(t => t.id === parseInt(req.params.id));
+  if (taskIndex !== -1) {
+    tasks.splice(taskIndex, 1);
+    res.json({ success: true });
+  } else {
+    res.status(404).json({ error: 'Task not found' });
   }
-  tasks.splice(tasks.indexOf(task), 1);
-  res.json(task);
 });
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = { tasks };
