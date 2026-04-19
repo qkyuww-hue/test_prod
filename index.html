@@ -1,72 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Task Tracker</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; } 
-    .task { display: flex; justify-content: space-between; padding: 10px; border: 1px solid #ccc; }
-    button { margin-left: 10px; }
-  </style>
-</head><body>
+  <style>body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+#task-list {
+  margin-top: 20px;}
+#task-input, button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;}
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;}
+.task-text {
+  flex: 2;
+}
+.buttons {
+  flex: 1;
+  display: flex;
+  gap: 5px;}
+  .buttons button {
+  padding: 5px 10px;
+  cursor: pointer;}
+</style>
+</head>
+<body>
   <h1>Task Tracker</h1>
-  <input type="text" id="taskInput" placeholder="Enter task..." style="width: 250px;" />
-  <button id="addTask">Add Task</button>
-  <br><br>
-  <div id="taskList"></div>
+
+  <input id="task-input" type="text" placeholder="Enter task title">
+  <button id="add-btn">Add Task</button>
+
+  <div id="task-list"></div>
 
   <script>
-    const taskInput = document.getElementById('taskInput');
-    const addTaskBtn = document.getElementById('addTask');
-    const taskList = document.getElementById('taskList');
+async function fetchTasks() {
+  try {
+    const response = await fetch('http://localhost:3000/tasks');
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error('Failed to fetch tasks:', err);
+  }
+}
 
-    // Load tasks from backend
-    async function loadTasks() {
-      try {
-        const response = await fetch('http://localhost:3000/tasks');
-        const tasks = await response.json();
-        taskList.innerHTML = '';
-        tasks.forEach(task => {
-          const taskElement = document.createElement('div');
-          taskElement.className = 'task';
-          taskElement.textContent = task.title;
-          
-          // Complete button
-          const completeBtn = document.createElement('button');
-          completeBtn.textContent = 'Complete';
-          taskElement.appendChild(completeBtn);
-          
-          // Delete button
-          const deleteBtn = document.createElement('button');
-          deleteBtn.textContent = 'Delete';
-          taskElement.appendChild(deleteBtn);
-          
-          taskList.appendChild(taskElement);
-        });
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-      }
-    }
-
-    addTaskBtn.addEventListener('click', async () => {
-      const taskText = taskInput.value.trim();
-      if (!taskText) return;
-
-      try {
-        const response = await fetch('http://localhost:3000/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: taskText, status: 'todo' })
-        });
-        const newTask = await response.json();
-        loadTasks();
-        taskInput.value = '';
-      } catch (error) {
-        console.error('Error adding task:', error);
-      }
+async function addTask(title) {
+  try {
+    const response = await fetch('http://localhost:3000/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title }),
     });
+    const task = await response.json();
+    return task;
+  } catch (err) {
+    console.error('Failed to add task:', err);
+  }
+}
 
-    // Initial load
-    loadTasks();
+async function updateTaskStatus(taskId, status) {
+  try {
+    const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    const task = await response.json();
+    return task;
+  } catch (err) {
+    console.error('Failed to update task:', err);
+  }
+}
+
+async function deleteTask(taskId) {
+  try {
+    const response = await fetch(`http://localhost:3000/tasks/${taskId}`, {
+      method: 'DELETE',
+    });
+    
+    return response.json();
+  } catch (err) {
+    console.error('Failed to delete task:', err);
+  }
+}
+
+async function renderTasks(tasks) {
+  const taskList = document.getElementById('task-list');
+  taskList.innerHTML = '';
+
+  if (tasks.length === 0) {
+    taskList.innerHTML = '<p>No tasks found</p>';
+  } else {
+    tasks.forEach(task => {
+      const item = document.createElement('div');
+      item.className = 'task-item';
+      
+      const taskText = document.createElement('div');
+      taskText.className = 'task-text';
+      taskText.textContent = task.title;
+      
+      const buttons = document.createElement('div');
+      buttons.className = 'buttons';
+      
+      const completeBtn = document.createElement('button');
+      completeBtn.textContent = 'Complete';
+      completeBtn.onclick = () => updateTaskStatus(task.id, 'completed');
+      
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.onclick = () => deleteTask(task.id);
+      
+      buttons.appendChild(completeBtn);
+      buttons.appendChild(deleteBtn);
+      
+      item.appendChild(taskText);
+      item.appendChild(buttons);
+      
+      taskList.appendChild(item);
+    });
+  }
+}
+
+// Fetch tasks and render when page loads
+fetchTasks()
+  .then(tasks => renderTasks(tasks))
+  .catch(() => {
+    document.getElementById('task-list').innerHTML = '<p>Error loading tasks</p>';
+  });
+
+// Add task on button click
+document.getElementById('add-btn').addEventListener('click', () => {
+  const inputField = document.getElementById('task-input');
+  const title = inputField.value.trim();
+  
+  if (title) {
+    addTask(title)
+      .then(task => {
+        inputField.value = '';
+        renderTasks([task]);
+      })
+      .catch(() => {
+        alert('Failed to add task. Please try again.');
+      });
+  }
+});
   </script>
-</body></html>
+</body>
+</html>
